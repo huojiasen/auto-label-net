@@ -41,21 +41,6 @@ def write_json(result_dir, entries):
   for ent in entries:
     for i in range(4, 11):
       ent[i] = float(ent[i])
-    obj_struct = dict()
-    obj_struct['x'] = ent[7]
-    image_name = ent[0]
-    obj_struct['y'] = ent[8]
-    obj_struct['width'] = ent[9] - ent[7]
-    obj_struct['height'] = ent[10] - ent[8]
-    obj_struct['color_condfidence'] = ent[4]
-    obj_struct['shape_confidence'] = ent[5]
-    obj_struct['merge_confidence'] = ent[6]
-    obj_struct['annotation'] = {
-      "type": ent[2],
-      "color": ent[1],
-      "text": '-'
-    }
-    objects.append(obj_struct)
   json_format['objects'] = objects
 
   dst_path = os.path.join(result_dir, image_name[:-3] + "json")
