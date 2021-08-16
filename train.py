@@ -16,9 +16,8 @@ num_gpus = 1
 
 
 def get_input_fn_truple(num_workers=1, worker_index=0):
-  image_list = os.path.join(cfg.dataset.LIST_DIR,
-                            cfg.dataset.train_list)
-  print('Read image list: ', image_list, num_workers, worker_index)
+  image_list = os.path.join(cfg.dataset.LIST_DIR, cfg.dataset.train_list)
+  
   dataset = tf.data.TextLineDataset(image_list)
   dataset = dataset.shard(num_workers, worker_index)
 
@@ -49,12 +48,13 @@ def model_fn(features, labels, mode):
   ''' Contruct graph '''
   tf.set_random_seed(cfg.RNG_SEED)
 
-  image, im_info, label, image_id, worker_index = get_input_fn_truple(
-    num_workers=num_gpus, worker_index=worker_index_id)
+  image, im_info, label, image_id, worker_index = get_input_fn_truple(num_workers=num_gpus, worker_index=worker_index_id)
+  
   worker_index_id += 1
 
-  from nets.resnet_v1 import resnetv1
-  net = resnetv1(num_layers=cfg.RESNET.num_layers)
+  from nets.resnet import resnetv
+  
+  net = resnetv(num_layers=cfg.RESNET.num_layers)
   layers = net.create_architecture('TRAIN', cfg.dataset.NUM_CLASSES,
                                    tag='default',
                                    anchor_scales=cfg.ANCHOR_SCALES,
@@ -78,13 +78,11 @@ def model_fn(features, labels, mode):
 
   optimizer = tf.train.MomentumOptimizer(lr, cfg.TRAIN.MOMENTUM)
   optimizer = tf.contrib.estimator.TowerOptimizer(optimizer)
-  # Compute the gradients with regards to the loss
 
-  # train_op = optimizer.minimize(loss, tf.train.get_global_step())
   gvs = optimizer.compute_gradients(loss)
   train_op = optimizer.apply_gradients(gvs, global_step)
 
-  # restore from finetune model
+  
   exclude = ['global_step', 'learning_rate']
   exclude += ['tower_{}/learning_rate'.format(i) for i in range(num_gpus)]
   variables_to_restore = tf.contrib.slim.get_variables_to_restore(
@@ -95,10 +93,7 @@ def model_fn(features, labels, mode):
 
   tf.summary.scalar('learning_rate', lr)
 
-  return tf.estimator.EstimatorSpec(
-    mode=tf.estimator.ModeKeys.TRAIN,
-    loss=loss,
-    train_op=train_op)
+  return tf.estimator.EstimatorSpec(mode=tf.estimator.ModeKeys.TRAIN, loss=loss, train_op=train_op)
 
 
 @click.command()
@@ -119,7 +114,6 @@ def train(data_folder, list_folder, enable_summary, config, gpus):
   mlflow.log_param('train', cfg.TRAIN)
   pprint.pprint(cfg)
 
-  tf.logging.set_verbosity(tf.logging.INFO)
   run_config = tf.estimator.RunConfig(
     save_checkpoints_steps=cfg.TRAIN.snapshot_interval,
     log_step_count_steps=(cfg.TRAIN.log_interval if enable_summary else cfg.TRAIN.MAX_ITERS),
