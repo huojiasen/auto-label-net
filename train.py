@@ -2,13 +2,7 @@ import os
 import sys
 import tensorflow as tf
 import click
-import pprint
 import mlflow
-
-
-from config import cfg, update_config
-from utils.timer import Timer
-from reader import get_blobs_func
 from tf_estimator.session_log_hook import SessionLogHook, SessionLogEndHook
 
 worker_index_id = 0
