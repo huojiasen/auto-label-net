@@ -105,7 +105,7 @@ def infer(data_folder, list_folder, infer_folder, model, config):
   update_config(config, data_folder, list_folder)
   image_folder = os.path.join(cfg.dataset.DATA_DIR, cfg.dataset.IMAGE_DIR)
   eval_list = os.path.join(cfg.dataset.LIST_DIR, cfg.dataset.test_list)
-  demonet = 'res101'
+  demonet = 'resnet'
   if os.path.exists(infer_folder):
     shutil.rmtree(infer_folder)
   os.makedirs(infer_folder)
